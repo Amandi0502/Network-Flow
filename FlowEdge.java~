@@ -1,0 +1,43 @@
+//20230355 - Amandi Lochana Alahakoon
+
+// Represents an edge in a flow network.
+public class FlowEdge {
+    private final int from, to;// Start and end vertices
+    private final int capacity;// Maximum capacity of the edge
+    private int flow; // Current flow through the edge
+
+    // Constructor to initialize the edge with given vertices and capacity
+    public FlowEdge(int from, int to, int capacity) {
+        this.from = from;
+        this.to = to;
+        this.capacity = capacity;
+        this.flow = 0;
+    }
+    // Constructor to initialize the edge with given vertices and capacity
+    public int from() { return from; }
+    // Getter for the target vertex
+    public int to() { return to; }
+    // Getter for the capacity of the edge
+    public int capacity() { return capacity; }
+    // Getter for the current flow
+    public int flow() { return flow; }
+
+    // Calculates the residual capacity toward a given vertex
+    // If towards 'to' vertex, residual is capacity - flow (how much more we can send)
+    // If towards 'from' vertex, residual is the flow (how much we can undo)
+    public int residualCapacityTo(int vertex) {
+        if (vertex == to) return capacity - flow;
+        else if (vertex == from) return flow;
+        else throw new IllegalArgumentException("Invalid vertex");// Invalid direction
+    }
+    // Adds flow to the edge in the direction toward the given vertex
+    public void addResidualFlowTo(int vertex, int delta) {
+        if (vertex == to) flow += delta;// Add flow towards 'to'
+        else if (vertex == from) flow -= delta;// Remove flow towards 'from'
+        else throw new IllegalArgumentException("Invalid vertex");
+    }
+
+    public String toString() {
+        return from + " -> " + to + " | flow: " + flow + " / " + capacity;
+    }
+}

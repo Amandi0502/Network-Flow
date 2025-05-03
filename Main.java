@@ -1,0 +1,94 @@
+//20230355 - Amandi Lochana Alahakoon
+
+import java.io.*;
+import java.time.*;
+import java.util.*;
+
+// Main class to process multiple flow network files and compute maximum flow
+public class Main {
+    public static void main(String[] args) {
+        String folderPath = "benchmark";// Folder containing input files
+
+        // Process bridge_1.txt to bridge_10.txt
+        for (int i = 1; i <= 10; i++) {
+            String fileName = String.format("bridge_%d.txt", i);
+            String outputFileName = String.format("bridge_%d_result.txt", i);
+            processFile(folderPath, fileName, outputFileName);
+        }
+
+        // Process ladder_1.txt to ladder_10.txt
+        for (int i = 1; i <= 10; i++) {
+            String fileName = String.format("ladder_%d.txt", i);
+            String outputFileName = String.format("ladder_%d_result.txt", i);
+            processFile(folderPath, fileName, outputFileName);
+        }
+    }
+    // Processes a single file: parses the network, runs Ford-Fulkerson, writes results
+    private static void processFile(String folderPath, String fileName, String outputFileName) {
+        File file = new File(folderPath, fileName);
+        // Check if input file exists
+        if (!file.exists()) {
+            System.out.println("File not found: " + file.getName());
+            return;
+        }
+
+        // Ensure the results directory exists
+        File resultsDir = new File("out");
+        if (!resultsDir.exists()) {
+            resultsDir.mkdir();
+        }
+
+        try (PrintWriter writer = new PrintWriter(new File("out", outputFileName))) {
+            writer.println("File processed    : " + folderPath + "/" + fileName);
+
+            // Record current timestamp
+            String timestamp = ZonedDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"));
+            writer.println("Timestamp         : " + timestamp);
+
+            FlowNetwork network;
+            // Parse the input file into a FlowNetwork object
+            try {
+                network = NetworkParser.parse(file.getPath());
+            } catch (Exception e) {
+                writer.println("Error parsing file: " + file.getName());
+                e.printStackTrace(writer);
+                return;
+            }
+
+            writer.println("Nodes             : " + network.V());
+
+            int source = 0;// Assume source is vertex 0
+            int sink = network.V() - 1;// Assume sink is the last vertex
+
+            long parseStart = System.nanoTime();
+            FordFulkerson solver = new FordFulkerson(network, source, sink);
+            long parseEnd = System.nanoTime();
+            // Write summary of results
+            writer.println("Maximum flow      : " + solver.maxFlow());
+            writer.println("Augmented steps   : " + solver.getAugmentingPathCount());
+            writer.printf("Parse time        : %.4f ms%n", (parseEnd - parseStart) / 1e6);
+            writer.printf("Algorithm time    : %.4f ms%n", solver.getAlgorithmTime() / 1e6);
+            writer.println();
+
+            // Print incremental improvements
+            writer.println("----- Incremental improvements -----");
+            List<String> pathDetails = solver.getAugmentingPathDetails();
+            for (int i = 0; i < pathDetails.size(); i++) {
+                writer.println(pathDetails.get(i));
+            }
+            writer.println();
+
+            // Print final flow values on edges
+            writer.println("----- Final flow values on edges -----");
+            List<String> edgeFlows = solver.getFinalEdgeFlows();
+            for (String edgeFlow : edgeFlows) {
+                writer.println(edgeFlow);
+            }
+
+            System.out.println("Processed " + fileName + " -> " + outputFileName);
+        } catch (FileNotFoundException e) {
+            System.out.println("Error creating output file: " + outputFileName);
+            e.printStackTrace();
+        }
+    }
+}

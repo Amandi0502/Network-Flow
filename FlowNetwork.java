@@ -1,0 +1,33 @@
+//20230355 - Amandi Lochana Alahakoon
+
+import java.util.*;
+
+// Represents a flow network (a directed graph where each edge has a capacity and a flow)
+public class FlowNetwork {
+    private final int V; // Number of vertices in the network
+    private List<FlowEdge>[] adj;// Adjacency list: Each vertex has a list of connected edges
+
+    // Constructor: Initializes a flow network with V vertices
+    public FlowNetwork(int V) {
+        this.V = V;
+        adj = (List<FlowEdge>[]) new List[V]; // Create an array of lists (using generic array creation workaround)
+        for (int i = 0; i < V; i++) {
+            adj[i] = new ArrayList<>();// Initialize each list
+        }
+    }
+    // Adds an edge to the network
+    // Adds the same edge to both the from-vertex and to-vertex lists
+    // (important for handling residual flows in both directions)
+    public void addEdge(FlowEdge e) {
+        adj[e.from()].add(e);
+        adj[e.to()].add(e); // Reverse edge is implicitly considered during residual capacity checks
+    }
+    // Returns the edges adjacent to a given vertex
+    public Iterable<FlowEdge> adj(int v) {
+        return adj[v];
+    }
+    // Returns the number of vertices
+    public int V() {
+        return V;
+    }
+}
